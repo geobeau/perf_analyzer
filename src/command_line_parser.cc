@@ -28,6 +28,7 @@
 #include "command_line_parser.h"
 
 #include <getopt.h>
+#include <grpc/compression.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -752,7 +753,8 @@ CLParser::Usage(const std::string& msg)
                    " --grpc-compression-algorithm: The compression algorithm "
                    "to be used by gRPC when sending request. Only supported "
                    "when grpc protocol is being used. The supported values are "
-                   "none, gzip, and deflate. Default value is none.",
+                   "none, gzip, deflate, and zstd (zstd requires linking gRPC "
+                   "built with zstd support). Default value is none.",
                    18)
             << std::endl;
 
@@ -1293,12 +1295,17 @@ CLParser::ParseCommandLine(int argc, char** argv)
             params_->compression_algorithm = cb::COMPRESS_DEFLATE;
           } else if (arg.compare("gzip") == 0) {
             params_->compression_algorithm = cb::COMPRESS_GZIP;
+#ifdef GRPC_COMPRESS_ZSTD
+          } else if (arg.compare("zstd") == 0) {
+            params_->compression_algorithm = cb::COMPRESS_ZSTD;
+#endif
           } else {
             Usage(
                 "Failed to parse --grpc-compression-algorithm. Unsupported "
                 "type provided: '" +
                 arg +
-                "'. The available options are 'gzip', 'deflate', or 'none'.");
+                "'. The available options are 'gzip', 'deflate', 'zstd' "
+                "(requires gRPC built with zstd support), or 'none'.");
           }
           params_->using_grpc_compression = true;
           break;
