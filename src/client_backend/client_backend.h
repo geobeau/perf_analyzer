@@ -150,7 +150,8 @@ enum ProtocolType { HTTP = 0, GRPC = 1, UNKNOWN = 2 };
 enum GrpcCompressionAlgorithm {
   COMPRESS_NONE = 0,
   COMPRESS_DEFLATE = 1,
-  COMPRESS_GZIP = 2
+  COMPRESS_GZIP = 2,
+  COMPRESS_ZSTD = 3
 };
 enum class TensorFormat { BINARY, JSON, UNKNOWN };
 typedef std::map<std::string, std::string> Headers;
