@@ -118,6 +118,10 @@ BackendToGrpcType(const GrpcCompressionAlgorithm compression_algorithm)
       return grpc_compression_algorithm::GRPC_COMPRESS_DEFLATE;
     case COMPRESS_GZIP:
       return grpc_compression_algorithm::GRPC_COMPRESS_GZIP;
+#ifdef GRPC_COMPRESS_ZSTD
+    case COMPRESS_ZSTD:
+      return grpc_compression_algorithm::GRPC_COMPRESS_ZSTD;
+#endif
     default:
       return grpc_compression_algorithm::GRPC_COMPRESS_NONE;
   }
