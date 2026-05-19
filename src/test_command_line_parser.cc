@@ -25,6 +25,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 #include <getopt.h>
+#include <grpc/compression.h>
 
 #include <array>
 
@@ -1977,6 +1978,67 @@ TEST_CASE("Testing Command Line Parser")
           act = parser.Parse(argc, argv),
           "Received gRPC method name 'hello.world.ServiceName.MethodName' that "
           "does not match the format: <package>.<service>/<method>.",
+          PerfAnalyzerException);
+
+      check_params = false;
+    }
+  }
+
+  SUBCASE("Option : --grpc-compression-algorithm")
+  {
+    SUBCASE("gzip")
+    {
+      int argc = 5;
+      char* argv[argc] = {
+          app_name, "-m", model_name, "--grpc-compression-algorithm", "gzip"};
+      REQUIRE_NOTHROW(act = parser.Parse(argc, argv));
+      CHECK(!parser.UsageCalled());
+
+      exp->using_grpc_compression = true;
+      exp->compression_algorithm =
+          clientbackend::GrpcCompressionAlgorithm::COMPRESS_GZIP;
+    }
+
+    SUBCASE("deflate")
+    {
+      int argc = 5;
+      char* argv[argc] = {
+          app_name, "-m", model_name, "--grpc-compression-algorithm",
+          "deflate"};
+      REQUIRE_NOTHROW(act = parser.Parse(argc, argv));
+      CHECK(!parser.UsageCalled());
+
+      exp->using_grpc_compression = true;
+      exp->compression_algorithm =
+          clientbackend::GrpcCompressionAlgorithm::COMPRESS_DEFLATE;
+    }
+
+#ifdef GRPC_COMPRESS_ZSTD
+    SUBCASE("zstd")
+    {
+      int argc = 5;
+      char* argv[argc] = {
+          app_name, "-m", model_name, "--grpc-compression-algorithm", "zstd"};
+      REQUIRE_NOTHROW(act = parser.Parse(argc, argv));
+      CHECK(!parser.UsageCalled());
+
+      exp->using_grpc_compression = true;
+      exp->compression_algorithm =
+          clientbackend::GrpcCompressionAlgorithm::COMPRESS_ZSTD;
+    }
+#endif
+
+    SUBCASE("bad value")
+    {
+      int argc = 5;
+      char* argv[argc] = {
+          app_name, "-m", model_name, "--grpc-compression-algorithm", "bogus"};
+
+      CHECK_THROWS_WITH_AS(
+          act = parser.Parse(argc, argv),
+          "Failed to parse --grpc-compression-algorithm. Unsupported type "
+          "provided: 'bogus'. The available options are 'gzip', 'deflate', "
+          "'zstd' (requires gRPC built with zstd support), or 'none'.",
           PerfAnalyzerException);
 
       check_params = false;
